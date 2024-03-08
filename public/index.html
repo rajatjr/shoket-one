@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One-on-One Messaging App</title>
+</head>
+
+
+<body style="max-width: 500px;margin: auto; border:dotted red; text-align: center; margin-top: 100px;background-image: url('https://img.freepik.com/free-photo/soft-vintage-gradient-blur-background-with-pastel-colored-well-use-as-studio-room-product-presentation-banner_1258-94421.jpg');">
+  <h1 style="color: black;">One-on-One <br/>Messaging App</h1>
+
+
+  <input type="text" id="usernameInput" placeholder="Enter your username">
+  <button id="loginButton">Login</button>
+
+  <h2 style="color: black;">Users Online</h2>
+  <ul id="userList"></ul>
+
+  <h2 style="color: blue;"> Chat ● </h2>
+  
+  </style>
+
+  <div id="messagesContainer"></div>
+
+  <input type="text" id="recipientInput" placeholder="Enter recipient username"><br/><br/><br/>
+  <input type="text" id="messageInput" placeholder="Enter your message">
+  <button id="sendButton">Send</button>
+  <br/><br/><br/>
+
+  
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <script>
+    const socket = io();
+
+    const usernameInput = document.getElementById('usernameInput');
+    const loginButton = document.getElementById('loginButton');
+    const recipientInput = document.getElementById('recipientInput');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const userList = document.getElementById('userList');
+
+loginButton.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+
+      if (username) {
+        socket.emit('login', username);
+        // usernameInput.value = '';
+        usernameInput.disabled = true;
+        loginButton.disabled = true;
+      }
+    });
+
+    sendButton.addEventListener('click', () => {
+      const recipient = recipientInput.value.trim();
+
+      console.log(recipient)
+      const message = messageInput.value.trim();
+
+      if (recipient && message) {
+        socket.emit('send-message', {
+          sender: socket.id,
+          senderName:usernameInput.value,
+          recipient,
+          message
+        });
+        messageInput.value = '';
+      }
+    });
+
+    socket.on('receive-message', (data) => {
+      const { sender, senderName, message } = data;
+
+      const messageElement = document.createElement('p');
+      messageElement.innerText = `${senderName}: ${message}`;
+      messagesContainer.appendChild(messageElement);
+    });
+
+    socket.on('user-list', (users) => {
+      userList.innerHTML = '';
+      users.forEach((user) => {
+        const userElement = document.createElement('li');
+        userElement.innerText = user;
+        userList.appendChild(userElement);
+      });
+    });
+  </script>
+</body>
+</html>
